@@ -19,17 +19,17 @@ class Emotion(Dataset):
         self._preprocessing = torch.nn.Sequential(
             *augmentation,
             torchaudio.transforms.MelSpectrogram(
-                sample_rate=self.config.melspec_sample_rate,
-                n_mels=self.config.melspec_n_mels,
-                n_fft=self.config.melspec_n_fft,
-                hop_length=self.config.melspec_hop_length,
-                f_max=self.config.melspec_f_max
+                sample_rate=self._config.melspec_sample_rate,
+                n_mels=self._config.melspec_n_mels,
+                n_fft=self._config.melspec_n_fft,
+                hop_length=self._config.melspec_hop_length,
+                f_max=self._config.melspec_f_max
             ),
             torchaudio.transforms.FrequencyMasking(
-                freq_mask_param=self.config.specaug_freq_mask_param
+                freq_mask_param=self._config.specaug_freq_mask_param
             ),
             torchaudio.transforms.TimeMasking(
-                time_mask_param=self.config.specaug_time_mask_param
+                time_mask_param=self._config.specaug_time_mask_param
             )
         )
         self._eps = 1e-9
