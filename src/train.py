@@ -10,6 +10,7 @@ from sklearn.model_selection import train_test_split
 from utils import get_wandb_token, set_seed
 from datasets.dataset import Emotion
 from datasets.augmentation import AugmentationNoise
+from train_engine import train_step
 
 
 def load_config(path):
@@ -58,7 +59,7 @@ def main():
     set_seed(config.random_seed)
 
     x, y = prepare_data('datasets/dataset.csv')
-    (x_train, y_train), (x_val, y_val) = train_test_split(
+    x_train, x_val, y_train, y_val = train_test_split(
         x,
         y,
         test_size=config.val_split,
@@ -67,22 +68,23 @@ def main():
     )
 
     train_ds = Emotion(x_train, y_train, config, augmentation=[AugmentationNoise(alpha=0.1)])
-    train_loader = DataLoader(
+    train_loader = torch.utils.data.DataLoader(
         train_ds,
-        batch_size=config.batch_size,
-        num_workers=config.dataloader_num_workers,
+        batch_size=8,
+        num_workers=0,
         shuffle=True,
     )
 
     val_ds = Emotion(x_val, y_val, config, augmentation=[AugmentationNoise(alpha=0.01)])
-    val_loader = DataLoader(
+    val_loader = torch.utils.data.DataLoader(
         val_ds,
-        batch_size=config.batch_size,
-        num_workers=config.dataloader_num_workers,
+        batch_size=8,
+        num_workers=0,
         shuffle=True,
     )
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    train_step(val_loader)
 
 
 if __name__ == '__main__':

@@ -7,7 +7,7 @@ class AugmentationNoise(nn.Module):
         super(AugmentationNoise, self).__init__()
 
         self._alpha = alpha
-        audio, _ = torchaudio.load('exercise_bike.wav')
+        audio, _ = torchaudio.load('datasets/exercise_bike.wav')
         self._noise_audio = audio.sum(dim=0)
 
     def forward(self, wav):
