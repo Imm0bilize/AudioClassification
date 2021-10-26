@@ -5,6 +5,8 @@ import torchaudio
 from torch.utils.data import Dataset
 from wandb import config as Config
 
+from src.utils import Stereo2Mono
+
 
 class Emotion(Dataset):
     def __init__(self, paths_to_x: List[str], y: List[int], config: Config, augmentation: List[torch.nn.Module]):
@@ -17,7 +19,10 @@ class Emotion(Dataset):
         self._config = config
 
         self._preprocessing = torch.nn.Sequential(
+            Stereo2Mono(),
+
             *augmentation,
+
             torchaudio.transforms.MelSpectrogram(
                 sample_rate=self._config.melspec_sample_rate,
                 n_mels=self._config.melspec_n_mels,
@@ -42,7 +47,5 @@ class Emotion(Dataset):
         wav, sample_rate = torchaudio.load(self._paths_to_x[idx])
 
         mel_spectrogram = torch.log(self._preprocessing(wav) + self._eps)
-        image[0, :, :mel_spectrogram.size(2)] = mel_spectrogram
-        # image = image.reshape(self.config.melspec_n_mels, self.config.img_padding_length)
-
+        image[0, :, :mel_spectrogram.size(2)] = mel_spectrogram[:, :, :self._config.img_padding_length]
         return image, self._y[idx]

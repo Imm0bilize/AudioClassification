@@ -10,7 +10,8 @@ from sklearn.model_selection import train_test_split
 from utils import get_wandb_token, set_seed
 from datasets.dataset import Emotion
 from datasets.augmentation import AugmentationNoise
-from train_engine import train_step
+from train_engine import train_loop
+from model import Classifier
 
 
 def load_config(path):
@@ -45,7 +46,7 @@ def prepare_data(path):
         tmp = np.zeros(num_classes)
         tmp[class_number-1] = 1.0
         y.append(tmp)
-    return all_paths, y
+    return all_paths, np.array(y).astype(np.float32)
 
 
 def main():
@@ -70,21 +71,40 @@ def main():
     train_ds = Emotion(x_train, y_train, config, augmentation=[AugmentationNoise(alpha=0.1)])
     train_loader = torch.utils.data.DataLoader(
         train_ds,
-        batch_size=8,
-        num_workers=0,
+        batch_size=config.batch_size,
         shuffle=True,
     )
 
     val_ds = Emotion(x_val, y_val, config, augmentation=[AugmentationNoise(alpha=0.01)])
     val_loader = torch.utils.data.DataLoader(
         val_ds,
-        batch_size=8,
-        num_workers=0,
+        batch_size=config.batch_size,
         shuffle=True,
     )
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    train_step(val_loader)
+
+    model = Classifier(in_channels=1,
+                       num_classes=7,
+                       staring_n_filters=config.starting_n_filters)
+    model = model.to(device)
+
+    optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay)
+    scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.90)
+    loss_fn = torch.nn.CrossEntropyLoss()
+
+    train_loop(
+        model,
+        optimizer,
+        scheduler,
+        loss_fn,
+        train_loader,
+        len(train_ds)//config.batch_size,
+        val_loader,
+        len(val_ds)//config.batch_size,
+        config.num_epochs,
+        device
+    )
 
 
 if __name__ == '__main__':
