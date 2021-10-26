@@ -39,10 +39,10 @@ class Emotion(Dataset):
 
     def __getitem__(self, idx):
         image = torch.zeros(1, self._config.melspec_n_mels, self._config.img_padding_length)
-        wav, sample_rate = torchaudio.load(self.paths[idx])
+        wav, sample_rate = torchaudio.load(self._paths_to_x[idx])
 
         mel_spectrogram = torch.log(self._preprocessing(wav) + self._eps)
         image[0, :, :mel_spectrogram.size(2)] = mel_spectrogram
-        image = image.reshape(self.config.melspec_n_mels, self.config.img_padding_length)
+        # image = image.reshape(self.config.melspec_n_mels, self.config.img_padding_length)
 
         return image, self._y[idx]

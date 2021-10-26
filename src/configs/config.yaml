@@ -7,10 +7,12 @@ weight_decay: 1e-3
 
 val_split: 0.3
 
+img_padding_length: 2000
+
 melspec_sample_rate: 16000
 melspec_n_mels: 64
 melspec_n_fft: 512
 melspec_hop_length: 128
 melspec_f_max: 4000
-specaug_freq_mask_param: 5,
-specaug_time_mask_param: 5,
+specaug_freq_mask_param: 5
+specaug_time_mask_param: 5
